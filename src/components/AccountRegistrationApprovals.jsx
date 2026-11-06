@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Check, Clock3, GraduationCap, Mail, Phone, ShieldX, X } from "lucide-react";
 import { Button } from "@mui/material";
 import PageTitle from "./PageHeader.jsx";
+import { readApiResponse } from "../lib/api.js";
 
 export default function AccountRegistrationApprovals() {
   const [registrations, setRegistrations] = useState([]);
@@ -14,8 +15,7 @@ export default function AccountRegistrationApprovals() {
     setError("");
     try {
       const response = await fetch("/api/admin/registrations", { credentials: "same-origin" });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not load registration requests.");
+      const result = await readApiResponse(response, "Could not load registration requests.");
       setRegistrations(result.registrations);
     } catch (loadError) {
       setError(loadError.message || "Could not load registration requests.");
@@ -38,8 +38,7 @@ export default function AccountRegistrationApprovals() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not update this registration.");
+      const result = await readApiResponse(response, "Could not update this registration.");
       setRegistrations((current) => current.map((item) => item.id === id ? result.registration : item));
     } catch (reviewError) {
       setError(reviewError.message || "Could not update this registration.");

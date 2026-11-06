@@ -14,6 +14,7 @@ import {
 import {
   Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField,
 } from "@mui/material";
+import { readApiResponse } from "./lib/api.js";
 import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
 import AccountRegistrationApprovals from "./components/AccountRegistrationApprovals.jsx";
@@ -115,8 +116,8 @@ function App() {
     let active = true;
     fetch("/api/auth/session", { credentials: "same-origin" })
       .then(async (response) => {
-        const result = await response.json();
-        if (active) setAccount(response.ok ? result.account : null);
+        const result = await readApiResponse(response, "Not signed in.");
+        if (active) setAccount(result.account);
       })
       .catch(() => {
         if (active) setAccount(null);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { readApiResponse } from "../lib/api.js";
 import {
   ArrowLeft, ArrowRight, BookOpen, Building2, GraduationCap, LockKeyhole, Mail, Phone, ShieldCheck,
 } from "lucide-react";
@@ -73,8 +74,7 @@ export default function Login() {
           ? { role: role.id, name, phone, email: identifier, password }
           : { role: role.id, identifier, password }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Unable to continue.");
+      await readApiResponse(response, "Unable to continue.");
       if (registering) {
         setNotice("Registration sent. You can sign in after an administrator approves your request.");
         setAuthMode("login");
