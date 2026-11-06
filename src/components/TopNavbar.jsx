@@ -25,7 +25,7 @@ function NotificationPanel({ bookings, onViewBooking, onClose }) {
   </div>;
 }
 
-function ProfileDropdown({ onOpenProfile, onOpenSettings, account, accountRole }) {
+function ProfileDropdown({ onOpenProfile, onOpenSettings, onLogout, account, accountRole }) {
   const [open, setOpen] = useState(false);
   const closeAndRun = (action) => {
     setOpen(false);
@@ -42,7 +42,7 @@ function ProfileDropdown({ onOpenProfile, onOpenSettings, account, accountRole }
       <div className="profile-dropdown-heading"><b>{account.name}</b><small>{accountRole}</small></div>
       <button onClick={() => closeAndRun(onOpenProfile)}>View profile</button>
       <button onClick={() => closeAndRun(onOpenSettings)}>Workspace settings</button>
-      <Link to="/login" onClick={() => sessionStorage.removeItem("campusOSSession")}>Sign out</Link>
+      <button onClick={() => closeAndRun(onLogout)}>Sign out</button>
     </div>}
   </div>;
 }
@@ -58,6 +58,7 @@ export default function TopNavbar({
   onViewBooking,
   onOpenProfile,
   onOpenSettings,
+  onLogout,
   account,
   accountRole,
 }) {
@@ -90,7 +91,7 @@ export default function TopNavbar({
         />}
       </div>
       <div className="top-divider" />
-      <ProfileDropdown onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} account={account} accountRole={accountRole} />
+      <ProfileDropdown onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} onLogout={onLogout} account={account} accountRole={accountRole} />
     </div>
   </header>;
 }

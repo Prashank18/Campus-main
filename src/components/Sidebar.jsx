@@ -19,8 +19,8 @@ export default function Sidebar({
         <span className="brand-name">campus<span>OS</span><small>OPERATIONS SUITE</small></span>
       </Link>
       <button className="campus-switch" onClick={onCampusOpen}>
-        <span className="campus-monogram">N</span>
-        <span className="campus-copy"><b>Northfield Institute</b><small>{campus}</small></span>
+        <span className="campus-monogram">IIT</span>
+        <span className="campus-copy"><b>IIT BHUBANESWAR</b><small>{campus}</small></span>
         <ChevronDown size={15} />
       </button>
       <nav className="side-nav">

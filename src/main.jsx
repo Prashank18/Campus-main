@@ -7,9 +7,12 @@ import "./styles.css";
 
 const theme = createTheme({
   palette: {
-    primary: { main: "#1d4ed8" },
-    secondary: { main: "#2563eb" },
-    background: { default: "#f8fafc", paper: "#ffffff" },
+    primary: { main: "#142c43" },
+    secondary: { main: "#147d75" },
+    success: { main: "#147d75" },
+    background: { default: "#f7faf9", paper: "#fbfdfc" },
+    text: { primary: "#173047", secondary: "#657986" },
+    divider: "#dce7e4",
   },
   typography: { fontFamily: '"Inter", sans-serif', button: { textTransform: "none", fontWeight: 600 } },
   shape: { borderRadius: 10 },

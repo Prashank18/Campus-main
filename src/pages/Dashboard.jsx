@@ -21,7 +21,7 @@ const utilisationByDay = [
   { day: "Sun", rooms: 18, venues: 30 },
 ];
 
-export default function Dashboard({ bookings, notify, search, onQuickAdd, onViewBooking }) {
+export default function Dashboard({ account, bookings, notify, search, onQuickAdd, onViewBooking }) {
   const [period, setPeriod] = useState("This week");
   const visibleBookings = bookings
     .filter((item) => `${item.event} ${item.owner} ${item.venue}`.toLowerCase().includes(search.toLowerCase()))
@@ -30,7 +30,7 @@ export default function Dashboard({ bookings, notify, search, onQuickAdd, onView
   return <>
     <PageTitle
       eyebrow="THURSDAY, NOVEMBER 5, 2026"
-      title="Good morning, Riya"
+      title={`Good morning, ${account?.name || "there"}`}
       subtitle="Here’s what’s happening across campus today."
       action={<Button variant="contained" startIcon={<Plus size={17} />} onClick={onQuickAdd}>Quick add</Button>}
     />
@@ -58,20 +58,20 @@ export default function Dashboard({ bookings, notify, search, onQuickAdd, onView
             <AreaChart data={utilisationByDay} margin={{ top: 12, right: 4, bottom: 0, left: -24 }}>
               <defs>
                 <linearGradient id="roomFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.18} />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#142c43" stopOpacity={0.18} />
+                  <stop offset="100%" stopColor="#142c43" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="venueFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#93c5fd" stopOpacity={0.28} />
-                  <stop offset="100%" stopColor="#93c5fd" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#73b6ac" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="#73b6ac" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid vertical={false} stroke="#e8edf4" strokeDasharray="3 5" />
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `${value}%`} tick={{ fill: "#64748b", fontSize: 11 }} />
-              <Tooltip contentStyle={{ border: "1px solid #e2e8f0", borderRadius: 10, fontSize: 12 }} />
-              <Area type="monotone" dataKey="rooms" name="Rooms" stroke="#2563eb" strokeWidth={2.5} fill="url(#roomFill)" />
-              <Area type="monotone" dataKey="venues" name="Venues" stroke="#8bb8f5" strokeWidth={2} fill="url(#venueFill)" />
+              <CartesianGrid vertical={false} stroke="#dce7e4" strokeDasharray="3 5" />
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#657986", fontSize: 11 }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `${value}%`} tick={{ fill: "#657986", fontSize: 11 }} />
+              <Tooltip contentStyle={{ border: "1px solid #dce7e4", borderRadius: 10, fontSize: 12, background: "#fbfdfc" }} />
+              <Area type="monotone" dataKey="rooms" name="Rooms" stroke="#142c43" strokeWidth={2.5} fill="url(#roomFill)" />
+              <Area type="monotone" dataKey="venues" name="Venues" stroke="#73b6ac" strokeWidth={2} fill="url(#venueFill)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
-  Activity, AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, Bell, BookOpen,
+  Activity, AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, Bell, BookOpen, Building2,
   CalendarDays, CalendarRange, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, Clock3, CloudUpload, Command, Download, FileJson2, FileSpreadsheet, Filter,
   GraduationCap, LayoutDashboard, MapPin, Menu, MessageSquareText, MoreHorizontal,
@@ -16,7 +16,12 @@ import {
 } from "@mui/material";
 import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
-import TimetableManagement from "./pages/TimetableManagement.jsx";
+import AccountRegistrationApprovals from "./components/AccountRegistrationApprovals.jsx";
+import StatCard from "./components/DashboardCard.jsx";
+import TimetableManagement, { initialSubjects } from "./pages/TimetableManagement.jsx";
+import ExamScheduler, { initialExamSchedule } from "./pages/ExamScheduler.jsx";
+import VenueManagement from "./pages/VenueManagement.jsx";
+import VenueBookingManagement from "./pages/VenueBookingManagement.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import TopNavbar from "./components/TopNavbar.jsx";
 import PageTitle from "./components/PageHeader.jsx";
@@ -29,13 +34,15 @@ const navGroups = [
       { to: "/", label: "Overview", icon: LayoutDashboard },
       { to: "/timetable", label: "Timetable Management", icon: CalendarRange, count: "2" },
       { to: "/exams", label: "Exams", icon: BookOpen },
-      { to: "/venues", label: "Venues & bookings", icon: MapPin },
+      { to: "/venue-management", label: "Venue Management", icon: Building2 },
+      { to: "/venues", label: "Venue Booking Management", icon: MapPin },
     ],
   },
   {
     title: "Operations",
     items: [
       { to: "/approvals", label: "Approvals", icon: ShieldCheck, count: "4" },
+      { to: "/registration-approvals", label: "Registration approvals", icon: Users },
       { to: "/conflicts", label: "Conflicts", icon: AlertTriangle },
       { to: "/faculty", label: "Faculty", icon: GraduationCap },
       { to: "/analytics", label: "Reports & analytics", icon: Activity },
@@ -45,10 +52,11 @@ const navGroups = [
 ];
 
 const initialBookings = [
-  { id: "BK-2408", event: "Spectra 2026", venue: "Main Auditorium", date: "Mon, Nov 9", time: "10:00 AM – 4:00 PM", people: 300, owner: "Cultural Committee", priority: "High", status: "Pending", initials: "CC", color: "peach" },
-  { id: "BK-2407", event: "Design thinking workshop", venue: "Seminar Hall B", date: "Tue, Nov 10", time: "2:00 PM – 5:00 PM", people: 72, owner: "Prof. Ananya Rao", priority: "Normal", status: "Pending", initials: "AR", color: "blue" },
-  { id: "BK-2406", event: "Robotics club showcase", venue: "Innovation Lab", date: "Wed, Nov 11", time: "11:00 AM – 1:00 PM", people: 45, owner: "Robotics Society", priority: "Normal", status: "Approved", initials: "RS", color: "mint" },
-  { id: "BK-2405", event: "Alumni town hall", venue: "Open-air Theatre", date: "Fri, Nov 13", time: "4:00 PM – 7:00 PM", people: 240, owner: "Alumni Office", priority: "High", status: "Rejected", initials: "AO", color: "lavender" },
+  { id: "BK-2408", event: "Spectra 2026", eventType: "Spectra Event", venue: "Main Auditorium", eventDate: "2026-11-09", start: "10:00", end: "16:00", date: "Mon, Nov 9", time: "10:00 AM - 4:00 PM", people: 300, owner: "Cultural Committee", priority: "Not configured", status: "Pending", requiredFacilities: ["Projector", "Microphone"], purpose: "Annual campus technology and culture festival.", decisionReason: "Awaiting review. Spectra priority rules are not configured.", history: [{ status: "Pending", by: "Cultural Committee", at: "Nov 6, 2026", note: "Booking request submitted." }], initials: "CC", color: "peach" },
+  { id: "BK-2407", event: "Design thinking workshop", eventType: "Workshop", venue: "Seminar Hall B", eventDate: "2026-11-10", start: "14:00", end: "17:00", date: "Tue, Nov 10", time: "2:00 PM - 5:00 PM", people: 72, owner: "Prof. Ananya Rao", priority: "Not configured", status: "Pending", requiredFacilities: ["Projector", "Wi-Fi"], purpose: "Faculty and student design workshop.", decisionReason: "Awaiting review.", history: [{ status: "Pending", by: "Prof. Ananya Rao", at: "Nov 5, 2026", note: "Booking request submitted." }], initials: "AR", color: "blue" },
+  { id: "BK-2406", event: "Robotics club showcase", eventType: "Technical Event", venue: "Innovation Lab", eventDate: "2026-11-11", start: "11:00", end: "13:00", date: "Wed, Nov 11", time: "11:00 AM - 1:00 PM", people: 45, owner: "Prof. K. Suresh", priority: "Not configured", status: "Approved", requiredFacilities: ["Computers", "Wi-Fi"], purpose: "Robotics club project showcase.", decisionReason: "Approved in the frontend demo.", history: [{ status: "Pending", by: "Prof. K. Suresh", at: "Nov 2, 2026", note: "Booking request submitted." }, { status: "Approved", by: "Administrator", at: "Nov 3, 2026", note: "Approved in the frontend demo." }], initials: "KS", color: "mint" },
+  { id: "BK-2405", event: "Alumni town hall", eventType: "Meeting", venue: "Open-air Theatre", eventDate: "2026-11-13", start: "16:00", end: "19:00", date: "Fri, Nov 13", time: "4:00 PM - 7:00 PM", people: 240, owner: "Alumni Office", priority: "Not configured", status: "Rejected", requiredFacilities: ["Microphone"], purpose: "Annual alumni discussion and campus update.", decisionReason: "Requested venue is not available for the selected time.", history: [{ status: "Pending", by: "Alumni Office", at: "Oct 28, 2026", note: "Booking request submitted." }, { status: "Rejected", by: "Administrator", at: "Oct 29, 2026", note: "Requested venue is not available for the selected time." }], initials: "AO", color: "lavender" },
+  { id: "BK-2404", event: "Faculty leadership seminar", eventType: "Seminar", venue: "Seminar Hall A", alternativeVenue: "Main Auditorium", eventDate: "2026-11-12", start: "09:00", end: "12:00", date: "Thu, Nov 12", time: "9:00 AM - 12:00 PM", people: 95, owner: "Dr. Meera Nair", priority: "Not configured", status: "Alternative Suggested", requiredFacilities: ["Projector", "Microphone"], purpose: "Faculty leadership and planning seminar.", decisionReason: "Seminar Hall A was unavailable in the sample data; Main Auditorium was suggested.", history: [{ status: "Pending", by: "Dr. Meera Nair", at: "Nov 4, 2026", note: "Booking request submitted." }, { status: "Alternative Suggested", by: "Administrator", at: "Nov 5, 2026", note: "Seminar Hall A was unavailable in the sample data; Main Auditorium was suggested." }], initials: "MN", color: "lavender" },
 ];
 
 const schedule = [
@@ -65,26 +73,33 @@ const roomData = [
   { name: "Venues", value: 18, color: "#f0b56b" },
 ];
 
+function readStoredList(key, fallback) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "null");
+    return Array.isArray(value) ? value : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function Status({ children }) {
   return <span className={`status status-${children.toLowerCase().replaceAll(" ", "-")}`}><i />{children}</span>;
 }
 
-function getCurrentAccount() {
-  try {
-    return JSON.parse(sessionStorage.getItem("campusOSSession") || "null");
-  } catch {
-    return null;
-  }
-}
-
 function App() {
   const location = useLocation();
-  const account = getCurrentAccount();
+  const [account, setAccount] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [bookings, setBookings] = useState(initialBookings);
+  const [bookings, setBookings] = useState(() => readStoredList("campusOSVenueBookings", initialBookings));
+  const [subjects, setSubjects] = useState(() => readStoredList("campusOSSubjects", initialSubjects));
+  const [exams, setExams] = useState(() => readStoredList("campusOSExams", initialExamSchedule));
+  const [enrollmentRequests, setEnrollmentRequests] = useState(() => readStoredList("campusOSEnrollmentRequests", []));
+  const [approvedEnrollments, setApprovedEnrollments] = useState(() => readStoredList("campusOSApprovedEnrollments", []));
+  const [subjectRequests, setSubjectRequests] = useState(() => readStoredList("campusOSSubjectRequests", []));
   const [toast, setToast] = useState("");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [campusOpen, setCampusOpen] = useState(false);
@@ -96,18 +111,72 @@ function App() {
   const [quickItems, setQuickItems] = useState([]);
   const [quickForm, setQuickForm] = useState({ title: "", room: "B-204", date: "2026-11-09", type: "Lecture" });
 
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/session", { credentials: "same-origin" })
+      .then(async (response) => {
+        const result = await response.json();
+        if (active) setAccount(response.ok ? result.account : null);
+      })
+      .catch(() => {
+        if (active) setAccount(null);
+      })
+      .finally(() => {
+        if (active) setAuthLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("campusOSSubjects", JSON.stringify(subjects));
+      localStorage.setItem("campusOSExams", JSON.stringify(exams));
+      localStorage.setItem("campusOSVenueBookings", JSON.stringify(bookings));
+      localStorage.setItem("campusOSEnrollmentRequests", JSON.stringify(enrollmentRequests));
+      localStorage.setItem("campusOSApprovedEnrollments", JSON.stringify(approvedEnrollments));
+      localStorage.setItem("campusOSSubjectRequests", JSON.stringify(subjectRequests));
+    } catch {
+      notify("Browser storage is unavailable; academic changes will last until this page is closed.");
+    }
+  }, [subjects, exams, bookings, enrollmentRequests, approvedEnrollments, subjectRequests]);
+
   const currentPage = useMemo(() => {
     const path = location.pathname;
     return [...navGroups.flatMap((group) => group.items)].find((item) => item.to === path)?.label || "Overview";
   }, [location.pathname]);
+  const visibleNavGroups = useMemo(
+    () => navGroups.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => (
+        item.to !== "/registration-approvals" || account?.role === "administrator"
+      )),
+    })),
+    [account?.role],
+  );
 
   function notify(message) {
     setToast(message);
     window.setTimeout(() => setToast(""), 3200);
   }
 
-  function updateBooking(id, status) {
-    setBookings((current) => current.map((booking) => booking.id === id ? { ...booking, status } : booking));
+  function updateBooking(id, status, reason = "", updates = {}) {
+    setBookings((current) => current.map((booking) => {
+      if (booking.id !== id) return booking;
+      const explanation = reason || `Booking ${status.toLowerCase()} in the frontend demo.`;
+      const historyEntry = {
+        status,
+        by: account?.name || "Campus user",
+        at: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        note: explanation,
+      };
+      return {
+        ...booking,
+        ...updates,
+        status,
+        decisionReason: explanation,
+        history: [...(booking.history || []), historyEntry],
+      };
+    }));
     notify(`Booking ${status.toLowerCase()}.`);
   }
 
@@ -119,24 +188,161 @@ function App() {
       const [hours, minutes] = value.split(":").map(Number);
       return `${hours % 12 || 12}:${String(minutes).padStart(2, "0")} ${hours >= 12 ? "PM" : "AM"}`;
     };
+    const requester = details.requestedBy || account?.name || "Campus user";
     const booking = {
-      id: `BK-${Date.now().toString().slice(-4)}`,
+      id: `BK-${Date.now().toString().slice(-6)}`,
       event: details.event,
+      eventType: details.eventType || "Meeting",
       venue: details.venue,
+      eventDate: details.date,
+      start: details.start,
+      end: details.end,
       date: dateLabel,
       time: `${toClock(details.start)} – ${toClock(details.end)}`,
       people: Number(details.attendees) || 0,
-      owner: "Riya Sharma",
-      priority: "Normal",
+      owner: requester,
+      priority: details.priority || "Not configured",
       status: "Pending",
-      initials: "RS",
+      purpose: details.purpose || "",
+      requiredFacilities: details.requiredFacilities || [],
+      decisionReason: "Awaiting review.",
+      history: [{
+        status: "Pending",
+        by: requester,
+        at: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        note: "Booking request submitted.",
+      }],
+      initials: requester.slice(0, 2).toUpperCase(),
       color: "mint",
     };
     setBookings((current) => [booking, ...current]);
     notify(`${details.event} submitted for approval.`);
+    return booking.id;
   }
 
-  const shared = { bookings, updateBooking, addBooking, notify, search };
+  const canManageAcademics = account?.role === "administrator" || account?.role === "teacher";
+
+  function addSubject(subject) {
+    if (!canManageAcademics) return false;
+    if (subjects.some((item) => item.code.toLowerCase() === subject.code.toLowerCase())) {
+      notify(`Subject code ${subject.code} already exists.`);
+      return false;
+    }
+    setSubjects((current) => [...current, subject]);
+    notify(`${subject.code} added to the subject catalog.`);
+    return true;
+  }
+
+  function saveExam(exam) {
+    if (!canManageAcademics) return;
+    setExams((current) => current.some((item) => item.id === exam.id)
+      ? current.map((item) => item.id === exam.id ? exam : item)
+      : [...current, exam]);
+  }
+
+  function deleteExam(id) {
+    if (!canManageAcademics) return;
+    setExams((current) => current.filter((exam) => exam.id !== id));
+  }
+
+  function requestEnrollment(details) {
+    if (account?.role !== "student") return;
+    const exists = [
+      ...enrollmentRequests.filter((item) => item.status === "Pending"),
+      ...approvedEnrollments,
+    ].some((item) => (
+      item.studentId.toLowerCase() === account.name.toLowerCase()
+      && item.code === details.code
+      && item.branch === details.branch
+      && item.year === details.year
+      && item.section === details.section
+      && item.semester === details.semester
+    ));
+    if (exists) {
+      notify("You already have a pending or approved registration for this subject and group.");
+      return false;
+    }
+    setEnrollmentRequests((current) => [{ ...details, id: `enrollment-${Date.now()}`, studentId: account.name, status: "Pending" }, ...current]);
+    notify("Subject registration request sent to the academic approvers.");
+    return true;
+  }
+
+  function requestNewSubject(details) {
+    if (account?.role !== "student") return;
+    const code = details.code.trim().toUpperCase();
+    if (subjects.some((subject) => subject.code.toLowerCase() === code.toLowerCase())
+      || subjectRequests.some((request) => request.code.toLowerCase() === code.toLowerCase() && request.status === "Pending")) {
+      notify(`Subject code ${code} already exists or is awaiting review.`);
+      return false;
+    }
+    setSubjectRequests((current) => [{
+      ...details,
+      code,
+      name: details.name.trim(),
+      id: `subject-request-${Date.now()}`,
+      studentId: account.name,
+      status: "Pending",
+    }, ...current]);
+    notify("New subject proposal sent to the academic approvers.");
+    return true;
+  }
+
+  function reviewEnrollment(id, status) {
+    if (!canManageAcademics) return;
+    const request = enrollmentRequests.find((item) => item.id === id);
+    if (!request) return;
+    setEnrollmentRequests((current) => current.map((item) => item.id === id ? { ...item, status } : item));
+    if (status === "Approved") {
+      setApprovedEnrollments((current) => current.some((item) => item.id === id) ? current : [{ ...request, status }, ...current]);
+    } else {
+      setApprovedEnrollments((current) => current.filter((item) => item.id !== id));
+    }
+    notify(`Student registration ${status.toLowerCase()}.`);
+  }
+
+  function reviewSubject(id, status) {
+    if (!canManageAcademics) return;
+    const request = subjectRequests.find((item) => item.id === id);
+    if (!request) return;
+    if (status === "Approved") {
+      if (subjects.some((subject) => subject.code.toLowerCase() === request.code.toLowerCase())) {
+        setSubjectRequests((current) => current.map((item) => item.id === id ? { ...item, status: "Rejected" } : item));
+        notify(`Could not approve ${request.code}: that subject code already exists.`);
+        return;
+      }
+      setSubjects((current) => [...current, {
+        code: request.code,
+        name: request.name,
+        branch: request.branch,
+        year: request.year,
+        semester: request.semester,
+      }]);
+    }
+    setSubjectRequests((current) => current.map((item) => item.id === id ? { ...item, status } : item));
+    notify(`Subject proposal ${status.toLowerCase()}.`);
+  }
+
+  const shared = {
+    bookings,
+    updateBooking,
+    addBooking,
+    notify,
+    search,
+    account,
+    canManage: canManageAcademics,
+    subjects,
+    onAddSubject: addSubject,
+    exams,
+    onSaveExam: saveExam,
+    onDeleteExam: deleteExam,
+    enrollmentRequests,
+    approvedEnrollments,
+    subjectRequests,
+    onRequestEnrollment: requestEnrollment,
+    onRequestSubject: requestNewSubject,
+    onReviewEnrollment: reviewEnrollment,
+    onReviewSubject: reviewSubject,
+  };
 
   if (location.pathname.startsWith("/login")) {
     return <Routes>
@@ -145,6 +351,8 @@ function App() {
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>;
   }
+
+  if (authLoading) return <main className="auth-loading">Checking your campus account...</main>;
 
   if (!account?.role || !account?.name) {
     return <Navigate to="/login" replace />;
@@ -156,7 +364,7 @@ function App() {
   return (
     <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
       <Sidebar
-        navGroups={navGroups}
+        navGroups={visibleNavGroups}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         campus={campus}
@@ -178,16 +386,27 @@ function App() {
           onViewBooking={setSelectedBooking}
           onOpenProfile={() => setProfileOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onLogout={async () => {
+            await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => {});
+            window.location.assign("/login");
+          }}
           account={account}
           accountRole={accountRole}
         />
         <MainContent>
           <Routes>
-            <Route path="/" element={<Dashboard bookings={bookings} notify={notify} search={search} onQuickAdd={() => setQuickAddOpen(true)} onViewBooking={setSelectedBooking} />} />
+            <Route path="/" element={<Dashboard account={account} bookings={bookings} notify={notify} search={search} onQuickAdd={() => setQuickAddOpen(true)} onViewBooking={setSelectedBooking} />} />
             <Route path="/timetable" element={<TimetableManagement {...shared} />} />
-            <Route path="/exams" element={<Exams {...shared} />} />
-            <Route path="/venues" element={<Venues {...shared} />} />
+            <Route path="/exams" element={<ExamScheduler {...shared} />} />
+            <Route path="/venue-management" element={<VenueManagement {...shared} />} />
+            <Route path="/venues" element={<VenueBookingManagement {...shared} />} />
             <Route path="/approvals" element={<Approvals {...shared} />} />
+            <Route
+              path="/registration-approvals"
+              element={account.role === "administrator"
+                ? <AccountRegistrationApprovals />
+                : <Navigate to="/" replace />}
+            />
             <Route path="/conflicts" element={<Conflicts {...shared} />} />
             <Route path="/faculty" element={<Faculty {...shared} />} />
             <Route path="/analytics" element={<Analytics {...shared} />} />
@@ -339,17 +558,6 @@ function FilterBar({ children }) {
 }
 function SelectFilter({ label, values }) { return <TextField className="filter-select" select size="small" defaultValue={values[0]} label={label}>{values.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</TextField>; }
 
-function Exams({ notify }) {
-  const [view, setView] = useState("Table");
-  const exams = [
-    ["CS301", "Data Structures & Algorithms", "Computer Science", "Nov 12, 2026", "9:00 AM – 12:00 PM", "Main Auditorium", "240"],
-    ["EC303", "Digital Electronics", "Electronics", "Nov 12, 2026", "1:30 PM – 4:30 PM", "Seminar Hall A", "120"],
-    ["CS501", "Database Management Systems", "Computer Science", "Nov 13, 2026", "9:00 AM – 12:00 PM", "Exam Hall 1", "180"],
-    ["DS501", "Design Research Methods", "Design", "Nov 14, 2026", "1:30 PM – 4:30 PM", "Design Studio", "64"],
-  ];
-  return <><PageTitle eyebrow="ACADEMIC PLANNING" title="Examination scheduler" subtitle="Plan exam sessions, assign rooms, and publish with confidence." action={<Button variant="contained" startIcon={<Plus size={17} />} onClick={() => notify("New examination form opened.")}>Schedule exam</Button>} /><FilterBar><SelectFilter label="Exam period" values={["Mid-semester · Nov 2026", "End-semester · Dec 2026"]} /><SelectFilter label="Branch" values={["All branches", "Computer Science", "Electronics", "Design"]} /><SelectFilter label="Year" values={["All years", "Year 2", "Year 3"]} /><SelectFilter label="Status" values={["All statuses", "Scheduled", "Draft"]} /></FilterBar><section className="exam-summary-row"><div className="exam-summary"><span className="tiny-icon blue"><BookOpen size={16} /></span><span><b>18</b><small>Exams scheduled</small></span></div><div className="exam-summary"><span className="tiny-icon green"><MapPin size={16} /></span><span><b>12</b><small>Rooms assigned</small></span></div><div className="exam-summary"><span className="tiny-icon orange"><Clock3 size={16} /></span><span><b>Nov 12</b><small>First exam date</small></span></div><div className="exam-summary"><span className="tiny-icon lavender"><Users size={16} /></span><span><b>1,248</b><small>Students appearing</small></span></div></section><article className="panel exam-table-panel"><div className="panel-heading"><div><h2>Mid-semester examinations</h2><p>November 12 – 20, 2026 · 18 scheduled</p></div><div className="segmented-control">{["Table", "Calendar"].map((item) => <button key={item} className={view === item ? "selected" : ""} onClick={() => setView(item)}>{item}</button>)}</div></div>{view === "Table" ? <div className="table-wrap"><table className="data-table exam-table"><thead><tr><th>SUBJECT</th><th>BRANCH</th><th>DATE</th><th>TIME SLOT</th><th>EXAM VENUE</th><th>STUDENTS</th><th>STATUS</th></tr></thead><tbody>{exams.map((exam) => <tr key={exam[0]}><td><div className="subject-cell"><b>{exam[1]}</b><small>{exam[0]}</small></div></td><td>{exam[2]}</td><td>{exam[3]}</td><td>{exam[4]}</td><td><span className="venue-cell"><MapPin size={13} />{exam[5]}</span></td><td>{exam[6]}</td><td><Status>Scheduled</Status></td></tr>)}</tbody></table></div> : <div className="exam-calendar">{exams.map((exam) => <div className="exam-calendar-day" key={exam[0]}><span className="calendar-date">{exam[3].split(",")[0].replace("Nov ", "")}<small>NOV</small></span><div className="exam-calendar-event"><b>{exam[1]}</b><span>{exam[0]} · {exam[4]}</span><small><MapPin size={12} /> {exam[5]}</small></div></div>)}</div>}<div className="table-footer"><span>Showing 4 of 18 examinations</span><div><button className="pagination-button" onClick={() => notify("Previous examination page.")}><ChevronLeft size={15} /></button><button className="pagination-button current">1</button><button className="pagination-button" onClick={() => notify("Page 2 selected.")}>2</button><button className="pagination-button" onClick={() => notify("Next examination page.")}><ChevronRight size={15} /></button></div></div></article></>;
-}
-
 function Venues({ notify }) {
   const [activeTab, setActiveTab] = useState("AI assistant");
   const [message, setMessage] = useState("");
@@ -380,7 +588,68 @@ function BookingCalendar({ notify }) {
   return <article className="panel calendar-panel"><div className="panel-heading"><div><h2>Venue booking calendar</h2><p>November 2026 · Campus-wide availability</p></div><div className="week-control"><button className="icon-button mini"><ChevronLeft size={17} /></button><b>November 2026</b><button className="icon-button mini"><ChevronRight size={17} /></button></div></div><div className="month-calendar">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => <div className="calendar-weekday" key={day}>{day}</div>)}{Array.from({ length: 35 }, (_, index) => { const day = index - 5; const valid = day > 0 && day <= 30; return <div className={`calendar-cell ${!valid ? "outside" : ""} ${day === 9 ? "selected-date" : ""}`} key={index}><span>{valid ? day : day <= 0 ? 31 + day : day - 30}</span>{day === 9 && <small className="calendar-event-pill">Spectra · Auditorium</small>}{day === 12 && <small className="calendar-event-pill blue-pill">Exam setup</small>}{day === 16 && <small className="calendar-event-pill gold-pill">Innovation week</small>}{day === 18 && <small className="calendar-event-pill blue-pill">Workshop · Hall B</small>}</div>; })}</div><div className="calendar-key"><span><i className="key-dot green" />Approved bookings</span><span><i className="key-dot gold" />Pending approval</span><span><i className="key-dot blue" />Academic events</span><Button size="small" onClick={() => notify("Venue booking request opened.")}>Request a venue</Button></div></article>;
 }
 
-function Approvals({ bookings, updateBooking, notify, search }) {
+function Approvals(props) {
+  const [mode, setMode] = useState("Bookings");
+  if (!props.canManage) return <StudentAcademicRequests {...props} />;
+  const pendingEnrollments = props.enrollmentRequests.filter((item) => item.status === "Pending").length;
+  const pendingSubjects = props.subjectRequests.filter((item) => item.status === "Pending").length;
+  return <>
+    <nav className="academic-approval-tabs" aria-label="Approval categories">
+      {[
+        ["Bookings", "Booking requests", props.bookings.filter((item) => item.status === "Pending").length],
+        ["Enrollments", "Student registrations", pendingEnrollments],
+        ["Subjects", "Subject proposals", pendingSubjects],
+      ].map(([key, label, count]) => <button type="button" key={key} className={mode === key ? "active" : ""} onClick={() => setMode(key)}>{label}{count !== null && <span>{count}</span>}</button>)}
+    </nav>
+    {mode === "Bookings" ? <BookingApprovals {...props} /> : <AcademicApprovalQueue {...props} mode={mode} />}
+  </>;
+}
+
+function StudentAcademicRequests({ account, enrollmentRequests, subjectRequests }) {
+  const requests = [
+    ...enrollmentRequests.filter((item) => item.studentId.toLowerCase() === account.name.toLowerCase()).map((item) => ({ ...item, label: "Class registration", description: `${item.code} · ${item.branch} · ${item.year} · Section ${item.section} · ${item.semester}` })),
+    ...subjectRequests.filter((item) => item.studentId.toLowerCase() === account.name.toLowerCase()).map((item) => ({ ...item, label: "Subject proposal", description: `${item.code} · ${item.name} · ${item.branch} · ${item.semester}` })),
+  ];
+  return <>
+    <PageTitle eyebrow="MY ACADEMIC REQUESTS" title="Registration status" subtitle="Track subject proposals and class registrations sent to administrators and teachers." />
+    <article className="panel academic-request-panel">
+      {requests.length ? requests.map((request) => <div className="academic-request-row" key={request.id}>
+        <span><b>{request.label}</b><small>{request.description}</small></span>
+        <Status>{request.status}</Status>
+      </div>) : <div className="academic-request-empty"><BookOpen size={20} /><b>No academic requests yet</b><span>Open Timetable Management to request a class registration or propose a subject.</span></div>}
+    </article>
+  </>;
+}
+
+function AcademicApprovalQueue({ mode, enrollmentRequests, subjectRequests, onReviewEnrollment, onReviewSubject }) {
+  const isEnrollment = mode === "Enrollments";
+  const requests = (isEnrollment ? enrollmentRequests : subjectRequests)
+    .slice()
+    .sort((left, right) => (left.status === "Pending" ? -1 : 1) - (right.status === "Pending" ? -1 : 1));
+  const title = isEnrollment ? "Student registration approvals" : "Subject proposal approvals";
+  return <>
+    <PageTitle eyebrow="ACADEMIC APPROVALS" title={title} subtitle={isEnrollment ? "Approve or reject student requests to join a specific subject and class group." : "Review student-proposed subjects before adding them to the shared catalog."} />
+    <article className="panel academic-request-panel">
+      {requests.length ? requests.map((request) => (
+        <div className="academic-request-row" key={request.id}>
+          <span className="academic-request-main">
+            <b>{isEnrollment ? `${request.subject} (${request.code})` : `${request.name} (${request.code})`}</b>
+            <small>{isEnrollment
+              ? `${request.studentId} · ${request.branch} · ${request.year} · Section ${request.section} · ${request.semester}`
+              : `${request.studentId} · ${request.branch} · ${request.year} · ${request.semester}`}</small>
+          </span>
+          <Status>{request.status}</Status>
+          {request.status === "Pending" && <div className="academic-request-actions">
+            <Button size="small" variant="contained" startIcon={<Check size={14} />} onClick={() => isEnrollment ? onReviewEnrollment(request.id, "Approved") : onReviewSubject(request.id, "Approved")}>Approve</Button>
+            <Button size="small" color="error" variant="outlined" startIcon={<X size={14} />} onClick={() => isEnrollment ? onReviewEnrollment(request.id, "Rejected") : onReviewSubject(request.id, "Rejected")}>Reject</Button>
+          </div>}
+        </div>
+      )) : <div className="academic-request-empty"><CheckCircle2 size={20} /><b>No requests to review</b><span>New student requests will appear here for administrators and teachers.</span></div>}
+    </article>
+  </>;
+}
+
+function BookingApprovals({ bookings, updateBooking, notify, search }) {
   const [tab, setTab] = useState("Pending");
   const [selected, setSelected] = useState(null);
   const filtered = bookings.filter((item) => tab === "All" || item.status === tab).filter((item) => `${item.event} ${item.owner} ${item.venue}`.toLowerCase().includes(search.toLowerCase()));
@@ -400,10 +669,15 @@ function Conflicts({ notify }) {
   return <><PageTitle eyebrow="OPERATIONS" title="Conflict management" subtitle="Resolve scheduling conflicts with changes you can review and approve." action={<Button variant="outlined" startIcon={<Activity size={16} />} onClick={() => notify("Conflict scan complete. 3 issues found.")}>Run conflict check</Button>} /><div className="conflict-summary"><div><span className="conflict-count red-count">2</span><span><b>Needs attention</b><small>High and medium severity</small></span></div><div><span className="conflict-count blue-count">1</span><span><b>Schedule optimization</b><small>Suggested improvement</small></span></div><div><span className="conflict-count green-count">8</span><span><b>Resolved this week</b><small>Across all departments</small></span></div></div><div className="conflict-filter">{["All conflicts", "Room booking", "Faculty availability", "Timetable"].map((item) => <button key={item} className={active === item ? "selected" : ""} onClick={() => setActive(item)}>{item}</button>)}</div><div className="conflict-list">{visible.map((item) => <article className="panel conflict-card" key={item.id}><div className={`conflict-mark ${item.tint}`}><AlertTriangle size={18} /></div><div className="conflict-content"><div className="conflict-title-line"><div><span className={`severity severity-${item.severity.toLowerCase()}`}>{item.severity} priority</span><span className="conflict-type">{item.type}</span></div>{approved.includes(item.id) && <Status>Approved</Status>}</div><h2>{item.title}</h2><p className="conflict-meta"><CalendarDays size={14} />{item.meta}</p><div className="affected-block"><b>Affected sessions</b>{item.affected.map((session) => <span key={session}><span className="session-bullet" />{session}</span>)}</div><div className="proposed-box"><div className="proposal-heading"><Sparkles size={14} /><b>Proposed change</b></div><p>{item.solution}</p><div className="before-after"><div><small>BEFORE</small><span>{item.affected[1]}</span><b>{item.type === "Timetable" ? "2:00 PM" : item.room}</b></div><ArrowRight size={15} /><div className="after"><small>AFTER</small><span>{item.affected[1]}</span><b>{item.type === "Timetable" ? "11:00 AM · Friday" : item.id === 1 ? "Room C-106" : "Friday · 11:00 AM"}</b></div></div></div><div className="conflict-actions"><Button variant="contained" disabled={approved.includes(item.id)} onClick={() => { setApproved([...approved, item.id]); notify("Proposed schedule change approved."); }}><Check size={15} />{approved.includes(item.id) ? "Change approved" : "Approve proposed change"}</Button><Button variant="text" onClick={() => notify("Edit proposed changes opened.")}>Edit proposal</Button><button className="text-link" onClick={() => notify("No other valid options found. " + item.solution)}><CircleHelp size={14} />Why this change?</button></div></div></article>)}</div></>;
 }
 
-function Faculty({ notify }) {
+function Faculty({ account, notify }) {
   const [prompt, setPrompt] = useState("");
   const [requestSent, setRequestSent] = useState(false);
-  return <><PageTitle eyebrow="PEOPLE & TEACHING" title="Faculty dashboard" subtitle="A personal view of teaching schedules, classes, and requests." action={<Button variant="outlined" startIcon={<Plus size={16} />} onClick={() => { setRequestSent(false); document.getElementById("schedule-request")?.scrollIntoView({ behavior: "smooth" }); }}>Request a change</Button>} /><div className="faculty-profile panel"><span className="faculty-avatar">AM</span><div className="faculty-identity"><div className="faculty-name-row"><h2>Dr. Ananya Mehta</h2><Status>Active</Status></div><p>Associate Professor · Department of Computer Science</p><div className="faculty-meta"><span><BookOpen size={14} /> 4 assigned subjects</span><span><MapPin size={14} /> 3 classrooms</span><span><Users size={14} /> 186 students</span></div></div><div className="faculty-id"><small>FACULTY ID</small><b>FAC-2024-018</b></div></div><div className="faculty-stats"><StatCard label="Teaching hours" value="16 hrs" change="of 20 hrs" detail="weekly allocation" icon={Clock3} tone="green" /><StatCard label="Classes this week" value="12" change="2 today" detail="next at 10:30 AM" icon={CalendarDays} tone="blue" /><StatCard label="Schedule requests" value={requestSent ? "1" : "0"} change={requestSent ? "Pending" : "All clear"} detail="awaiting response" icon={MessageSquareText} tone="orange" /></div><article className="panel faculty-timetable"><div className="panel-heading"><div><h2>My weekly timetable</h2><p>Week of November 9, 2026</p></div><button className="text-link" onClick={() => notify("Personal timetable exported.")}>Download <Download size={14} /></button></div><div className="faculty-week">{schedule.map((day) => <div className="faculty-day" key={day.day}><div className="faculty-day-label">{day.day.slice(0, 3)} <b>{day.date}</b></div>{(day.day === "Monday" ? [day.items[0], day.items[2]] : day.day === "Tuesday" ? [day.items[0]] : day.day === "Wednesday" ? [day.items[0]] : day.day === "Thursday" ? [day.items[0], day.items[2]] : [day.items[0]]).map((item, index) => <div className={`faculty-session session-${item.color}`} key={index}><b>{item.title}</b><span>{item.time} · {item.room}</span><small>{item.meta.split(" · ").slice(1).join(" · ")}</small></div>)}</div>)}</div></article><section id="schedule-request" className="faculty-request-grid"><article className="panel request-composer"><div className="panel-heading"><div><h2>Schedule change request</h2><p>Describe what you need in plain language.</p></div><Sparkles size={18} className="composer-spark" /></div><div className="request-prompt"><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="e.g. Can I move my Thursday 2 PM session to Friday morning? I have a department meeting." /><div className="prompt-helper"><span><Sparkles size={13} /> We’ll suggest times that work for everyone</span><button onClick={() => { if (prompt.trim()) { setRequestSent(true); setPrompt(""); notify("Schedule request submitted."); } else notify("Add a short description first."); }}><span>Send request</span><ArrowRight size={15} /></button></div></div><div className="request-prompt-examples"><span>Try:</span><button onClick={() => setPrompt("Move my Thursday afternoon session to Friday morning")}>Move a session</button><button onClick={() => setPrompt("I need a substitute for my Monday 9 AM class")}>Request a substitute</button></div></article><article className="panel alternatives-panel"><div className="panel-heading"><div><h2>Suggested alternative</h2><p>For your Thursday 2:00 PM conflict</p></div><span className="match-badge"><Check size={12} /> Best match</span></div><div className="alternative-row"><div className="alternative-date"><b>13</b><small>FRI</small></div><div><b>Friday, November 13</b><span>11:00 AM – 12:00 PM</span><small>Room C-106 · No conflicts</small></div></div><div className="alternative-reason"><CheckCircle2 size={15} /> Students and room are both available.</div><div className="alternative-actions"><Button variant="contained" onClick={() => notify("Alternative schedule requested for approval.")}>Request this time</Button><Button variant="outlined" onClick={() => notify("More alternative times loaded.")}>See other times</Button></div><div className="request-status"><span>RECENT REQUEST</span><div><span>Move Friday tutorial</span><Status>Pending</Status></div></div></article></section></>;
+  const facultyName = account?.name || "Faculty member";
+  const initials = facultyName.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const profileDescription = account?.role === "administrator"
+    ? "Administrator · Faculty workspace preview"
+    : "Faculty workspace · Department details not assigned";
+  return <><PageTitle eyebrow="PEOPLE & TEACHING" title="Faculty dashboard" subtitle="Review teaching schedules, workload, and change requests. The timetable below is preview data until faculty records are connected." action={<Button variant="outlined" startIcon={<Plus size={16} />} onClick={() => { setRequestSent(false); document.getElementById("schedule-request")?.scrollIntoView({ behavior: "smooth" }); }}>Request a change</Button>} /><div className="faculty-profile panel"><span className="faculty-avatar">{initials}</span><div className="faculty-identity"><div className="faculty-name-row"><h2>{facultyName}</h2><Status>Active</Status></div><p>{profileDescription}</p><div className="faculty-meta"><span><BookOpen size={14} /> 4 preview subjects</span><span><MapPin size={14} /> 3 sample rooms</span><span><Users size={14} /> 186 sample students</span></div></div><div className="faculty-id"><small>ACCOUNT EMAIL</small><b>{account?.email || "Not assigned"}</b></div></div><div className="faculty-stats"><StatCard label="Teaching hours" value="16 hrs" change="of 20 hrs" detail="sample weekly allocation" icon={Clock3} tone="green" /><StatCard label="Classes this week" value="12" change="2 today" detail="sample schedule" icon={CalendarDays} tone="blue" /><StatCard label="Schedule requests" value={requestSent ? "1" : "0"} change={requestSent ? "Pending" : "All clear"} detail="local preview" icon={MessageSquareText} tone="orange" /></div><article className="panel faculty-timetable"><div className="panel-heading"><div><h2>Weekly timetable preview</h2><p>Sample week · November 9–13, 2026</p></div><button className="text-link" onClick={() => notify("Preview timetable export is not connected yet.")}>Download <Download size={14} /></button></div><div className="faculty-week">{schedule.map((day) => <div className="faculty-day" key={day.day}><div className="faculty-day-label">{day.day.slice(0, 3)} <b>{day.date}</b></div>{(day.day === "Monday" ? [day.items[0], day.items[2]] : day.day === "Tuesday" ? [day.items[0]] : day.day === "Wednesday" ? [day.items[0]] : day.day === "Thursday" ? [day.items[0], day.items[2]] : [day.items[0]]).map((item, index) => <div className={`faculty-session session-${item.color}`} key={index}><b>{item.title}</b><span>{item.time} · {item.room}</span><small>{item.meta.split(" · ").slice(1).join(" · ")}</small></div>)}</div>)}</div></article><section id="schedule-request" className="faculty-request-grid"><article className="panel request-composer"><div className="panel-heading"><div><h2>Schedule change request</h2><p>Describe what you need in plain language.</p></div><Sparkles size={18} className="composer-spark" /></div><div className="request-prompt"><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="e.g. Can I move my Thursday 2 PM session to Friday morning? I have a department meeting." /><div className="prompt-helper"><span><Sparkles size={13} /> We’ll suggest times that work for everyone</span><button onClick={() => { if (prompt.trim()) { setRequestSent(true); setPrompt(""); notify("Schedule request submitted."); } else notify("Add a short description first."); }}><span>Send request</span><ArrowRight size={15} /></button></div></div><div className="request-prompt-examples"><span>Try:</span><button onClick={() => setPrompt("Move my Thursday afternoon session to Friday morning")}>Move a session</button><button onClick={() => setPrompt("I need a substitute for my Monday 9 AM class")}>Request a substitute</button></div></article><article className="panel alternatives-panel"><div className="panel-heading"><div><h2>Suggested alternative</h2><p>For the sample Thursday 2:00 PM session</p></div><span className="match-badge"><Check size={12} /> Sample option</span></div><div className="alternative-row"><div className="alternative-date"><b>13</b><small>FRI</small></div><div><b>Friday, November 13</b><span>11:00 AM – 12:00 PM</span><small>Room C-106 · Sample availability only</small></div></div><div className="alternative-reason"><CheckCircle2 size={15} /> Preview only; live room conflicts are not checked.</div><div className="alternative-actions"><Button variant="contained" onClick={() => notify("Schedule change requests are not connected to the backend yet.")}>Request this time</Button><Button variant="outlined" onClick={() => notify("Alternative search is not connected to the backend yet.")}>See other times</Button></div><div className="request-status"><span>RECENT REQUEST</span><div><span>{requestSent ? "Schedule change request" : "No submitted requests yet"}</span><Status>{requestSent ? "Pending" : "Active"}</Status></div></div></article></section></>;
 }
 
 function Analytics({ notify }) {
