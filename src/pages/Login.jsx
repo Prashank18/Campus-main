@@ -199,7 +199,7 @@ export default function Login() {
               {role.id !== "administrator" && <button className="login-mode-switch" type="button" onClick={() => { setAuthMode((mode) => mode === "register" ? "login" : "register"); setError(""); setNotice(""); }}>
                 {authMode === "register" ? "Already approved? Sign in" : "First time here? Register for approval"}
               </button>}
-              {role.id === "administrator" && <p className="login-demo-note">Administrator credentials are verified by the local server.</p>}
+              {role.id === "administrator" && <p className="login-demo-note">Administrator credentials are verified securely by the server.</p>}
               <Link to="/login" className="login-switch">Use a different portal</Link>
             </>
           )}

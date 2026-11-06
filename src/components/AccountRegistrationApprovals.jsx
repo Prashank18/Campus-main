@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Clock3, GraduationCap, Mail, Phone, ShieldX, X } from "lucide-react";
+import { Check, Clock3, GraduationCap, Mail, Phone, Trash2, X } from "lucide-react";
 import { Button } from "@mui/material";
 import PageTitle from "./PageHeader.jsx";
 import { readApiResponse } from "../lib/api.js";
@@ -47,6 +47,24 @@ export default function AccountRegistrationApprovals() {
     }
   }
 
+  async function deleteRegistration(registration) {
+    if (!window.confirm(`Delete the rejected request from ${registration.name}?`)) return;
+    setUpdatingId(registration.id);
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/registrations/${encodeURIComponent(registration.id)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      await readApiResponse(response, "Could not delete this registration.");
+      setRegistrations((current) => current.filter((item) => item.id !== registration.id));
+    } catch (deleteError) {
+      setError(deleteError.message || "Could not delete this registration.");
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
   const pendingCount = registrations.filter((item) => item.status === "Pending").length;
 
   return <>
@@ -77,7 +95,7 @@ export default function AccountRegistrationApprovals() {
                 <Button size="small" variant="contained" color="success" disabled={Boolean(updatingId)} startIcon={<Check size={14} />} onClick={() => void reviewRegistration(registration.id, "Approved")}>Approve</Button>
                 <Button size="small" variant="outlined" color="error" disabled={Boolean(updatingId)} startIcon={<X size={14} />} onClick={() => void reviewRegistration(registration.id, "Rejected")}>Reject</Button>
               </div>}
-              {registration.status === "Rejected" && <ShieldX className="account-approval-rejected-icon" size={18} aria-label="Rejected" />}
+              {registration.status === "Rejected" && <Button size="small" color="error" disabled={Boolean(updatingId)} startIcon={<Trash2 size={14} />} onClick={() => void deleteRegistration(registration)}>Delete</Button>}
             </article>
           ))}
         </div> : <div className="account-approval-empty"><Check size={20} /><b>No registrations yet</b><span>New student and teacher requests will appear here.</span></div>}
